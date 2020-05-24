@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jujili/exch"
+	"github.com/jujili/exch/backtest"
 	"github.com/jujili/ta"
 )
 
@@ -15,7 +16,7 @@ import (
 //   "balance" 话题中获取即时更新的账户信息。
 // 在下达新订单的时候，会先在 "cancelAllOrders" 里面发出通知，取消所有的未成交订单。
 // 然后再利用 "order" 话题下单。
-func strategyService(ctx context.Context, ps exch.Pubsub, interval time.Duration) {
+func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Duration) {
 	topic := fmt.Sprintf("%sBar", interval)
 	bars, err := ps.Subscribe(ctx, topic)
 	if err != nil {
@@ -33,12 +34,16 @@ func strategyService(ctx context.Context, ps exch.Pubsub, interval time.Duration
 				msg.Ack()
 				short.Update(bar.Close)
 				long.Update(bar.Close)
+				if !long.IsInited() {
+					continue
+				}
+				// TODO: 添加初始化好了以后的操作。
 			}
 		}
 
 	}()
 }
 
-func cancelAllOrders(pub exch.Publisher) {
-	pub("cancelAllOrders", nil)
+func cancelAllOrders(pub backtest.Publisher) {
+	pub.Publish("cancelAllOrders", nil)
 }
