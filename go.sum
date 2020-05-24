@@ -26,6 +26,7 @@ github.com/jujili/clock v0.10.0/go.mod h1:WcXlJiGt6/yEoom1nBDEJIsEJKzhJSU3gCqWAC
 github.com/jujili/exch v0.1.0 h1:oRjqXJ3pSkUbKyM/JHCXSpvEXDZteCioK2V5puRn4v0=
 github.com/jujili/exch v0.1.0/go.mod h1:AynmULQLdhkIbN2cyPg3Qu6uFgKnlFSp4Md1thMbcgk=
 github.com/jujili/ta v0.0.0 h1:53p3UXowZ19++9B/Qu/OzVMTSwHvaSWbPSR3px0UUCM=
+github.com/jujili/ta v0.0.0/go.mod h1:AsHMMhKgExvHoa7YS5EcHFPiWpI/WCYXmuggK1bM9ro=
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/jujili/exch"
-	"github.com/jujili/exch/backtest"
 	"github.com/jujili/ta"
 )
 
@@ -22,14 +21,19 @@ func strategyService(ctx context.Context, ps exch.Pubsub, interval time.Duration
 	if err != nil {
 		panic(err)
 	}
-	decBar := backtest.DecBarFunc()
+	decBar := exch.DecBarFunc()
 	//
 	go func() {
 		short := ta.NewEWMA(10)
 		long := ta.NewEWMA(30)
-
 		for {
-
+			select {
+			case msg := <-bars:
+				bar := decBar(msg.Payload)
+				msg.Ack()
+				short.Update(bar.Close)
+				long.Update(bar.Close)
+			}
 		}
 
 	}()
