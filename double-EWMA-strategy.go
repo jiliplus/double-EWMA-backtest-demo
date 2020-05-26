@@ -47,7 +47,7 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 				msg.Ack()
 				short.Update(bar.Close)
 				long.Update(bar.Close)
-				if !long.IsInited() {
+				if !short.IsInited() || !long.IsInited() {
 					continue
 				}
 				s, l := short.Value(), long.Value()
