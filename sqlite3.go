@@ -58,11 +58,9 @@ func copyDB(dst, src *sqlite3.SQLiteConn) {
 }
 
 func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
-	// beginUTCMillisecond := int64(1514736000000)
-	// endUTCMillisecond := int64(1577808000000)
+	beginUTCMillisecond := int64(1514736000000)
+	endUTCMillisecond := int64(1577808000000)
 	// endUTCMillisecond := int64(1517414400000)
-	beginUTCMillisecond := int64(1502942432285)
-	endUTCMillisecond := int64(1509711755324)
 	//
 	beginTime := tools.LocalTime(beginUTCMillisecond)
 	endTime := tools.LocalTime(endUTCMillisecond)
@@ -91,8 +89,13 @@ func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
 }
 
 func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB) {
-	beginUTCMillisecond := int64(1514736000000)
-	endUTCMillisecond := int64(1577808000000)
+	// beginUTCMillisecond := int64(1514736000000)
+	// endUTCMillisecond := int64(1577808000000)
+	//
+	// endUTCMillisecond := int64(1517414400000)
+	beginUTCMillisecond := int64(1502942432285)
+	endUTCMillisecond := int64(1502943432285)
+	// endUTCMillisecond := int64(1509711755324)
 	//
 	beginTime := tools.LocalTime(beginUTCMillisecond)
 	endTime := tools.LocalTime(endUTCMillisecond)
@@ -104,6 +107,7 @@ func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB)
 	}
 	defer rows.Close()
 	enc := exch.EncFunc()
+
 	for rows.Next() {
 		var id int64
 		var price, quantity float64
@@ -112,12 +116,19 @@ func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB)
 		if err != nil {
 			log.Fatal(err)
 		}
+		// log.Println(id, price, quantity, utc)
 		tick := exch.NewTick(id, tools.LocalTime(utc), price, quantity)
-		msg := message.NewMessage(watermill.NewUUID(), enc(tick))
-		pub.Publish("tick", msg)
+		payload := enc(tick)
+		log.Println("src", tick)
+		msg := message.NewMessage(watermill.NewUUID(), payload)
+		if err := pub.Publish("tick", msg); err != nil {
+			panic(err)
+		}
+		// time.Sleep(time.Second)
 	}
 	err = rows.Err()
 	if err != nil {
 		log.Fatal(err)
 	}
+	pub.Close()
 }
