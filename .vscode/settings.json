@@ -3,6 +3,7 @@
 		"EWMA",
 		"Inited",
 		"UUID",
+		"gochannel",
 		"ngis"
 	]
 }

@@ -58,8 +58,11 @@ func copyDB(dst, src *sqlite3.SQLiteConn) {
 }
 
 func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
-	beginUTCMillisecond := int64(1514736000000)
-	endUTCMillisecond := int64(1577808000000)
+	// beginUTCMillisecond := int64(1514736000000)
+	// endUTCMillisecond := int64(1577808000000)
+	// endUTCMillisecond := int64(1517414400000)
+	beginUTCMillisecond := int64(1502942432285)
+	endUTCMillisecond := int64(1509711755324)
 	//
 	beginTime := tools.LocalTime(beginUTCMillisecond)
 	endTime := tools.LocalTime(endUTCMillisecond)
