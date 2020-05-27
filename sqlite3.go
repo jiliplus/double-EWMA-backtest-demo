@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/jujili/exch"
+	"github.com/jujili/exch/backtest"
 	"github.com/jujili/jili/pkg/tools"
 	"github.com/mattn/go-sqlite3"
 )
@@ -52,8 +57,6 @@ func copyDB(dst, src *sqlite3.SQLiteConn) {
 	backup.Step(-1)
 }
 
-// TODO: 改造成发送到 channel
-// TODO: 改造成由 context 控制
 func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
 	beginUTCMillisecond := int64(1514736000000)
 	endUTCMillisecond := int64(1577808000000)
@@ -84,32 +87,34 @@ func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
 	}
 }
 
-// func showFooTable(db *sql.DB) {
-// 	beginUTCMillisecond := int64(1514736000000)
-// 	endUTCMillisecond := int64(1577808000000)
-// 	//
-// 	beginTime := tools.LocalTime(beginUTCMillisecond)
-// 	endTime := tools.LocalTime(endUTCMillisecond)
-// 	log.Printf("数据起止时间为 [%s, %s)", beginTime, endTime)
-// 	//
-// 	// sql := fmt.Sprintf("SELECT id, utc FROM btcusdt WHERE utc BETWEEN %d AND %d ORDER BY id DESC LIMIT 10", beginUTCMillisecond, endUTCMillisecond)
-// 	sql := fmt.Sprintf("SELECT id, utc FROM btcusdt WHERE utc BETWEEN %d AND %d", beginUTCMillisecond, endUTCMillisecond)
-// 	rows, err := db.Query(sql)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer rows.Close()
-// 	for rows.Next() {
-// 		var id int
-// 		var utc int64
-// 		err = rows.Scan(&id, &utc)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		fmt.Printf("%02d %d\n", id, utc)
-// 	}
-// 	err = rows.Err()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
+func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB) {
+	beginUTCMillisecond := int64(1514736000000)
+	endUTCMillisecond := int64(1577808000000)
+	//
+	beginTime := tools.LocalTime(beginUTCMillisecond)
+	endTime := tools.LocalTime(endUTCMillisecond)
+	log.Printf("数据起止时间为 [%s, %s)", beginTime, endTime)
+	sql := fmt.Sprintf("SELECT id, price, quantity, utc FROM btcusdt WHERE utc BETWEEN %d AND %d", beginUTCMillisecond, endUTCMillisecond)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	enc := exch.EncFunc()
+	for rows.Next() {
+		var id int64
+		var price, quantity float64
+		var utc int64
+		err = rows.Scan(&id, &price, &quantity, &utc)
+		if err != nil {
+			log.Fatal(err)
+		}
+		tick := exch.NewTick(id, tools.LocalTime(utc), price, quantity)
+		msg := message.NewMessage(watermill.NewUUID(), enc(tick))
+		pub.Publish("tick", msg)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
