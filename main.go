@@ -35,8 +35,8 @@ func main() {
 		wg.Done()
 	}()
 
-	// srcName := "./btcusdt.sqlite3"
-	srcName := "./binance.sqlite3"
+	srcName := "./btcusdt.sqlite3"
+	// srcName := "./binance.sqlite3"
 	//
 	db := openToMemory(srcName)
 	defer db.Close()
