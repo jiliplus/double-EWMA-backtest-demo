@@ -33,14 +33,16 @@ func main() {
 		for msg := range ticks {
 			tick := decTick(msg.Payload)
 			msg.Ack()
-			log.Println("dst", tick)
+			log.Println("in main go for", tick)
 		}
 		wg.Done()
 	}()
 
+	interval := time.Hour
+
 	// 启动策略
 	log.Println("准备启动 策略")
-	strategyService(context.TODO(), pubSub, time.Hour, "BTCUSDT", "BTC", "USDT")
+	strategyService(context.TODO(), pubSub, interval, "BTCUSDT", "BTC", "USDT")
 	log.Println("完成启动 策略")
 
 	// 启动帐户服务
@@ -55,6 +57,9 @@ func main() {
 	usdt := exch.NewAsset("USDT", 10000, 0)
 	bal := exch.NewBalances(usdt)
 	backtest.NewBackTest(context.TODO(), pubSub, *bal)
+
+	// 启动 TickBarService
+	backtest.TickBarService(context.TODO(), pubSub, interval)
 
 	// srcName := "./btcusdt.sqlite3"
 	srcName := "./binance.sqlite3"

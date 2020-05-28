@@ -20,6 +20,7 @@ import (
 // 在下达新订单的时候，会先在 "cancelAllOrders" 里面发出通知，取消所有的未成交订单。
 // 然后再利用 "order" 话题下单。
 func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Duration, symbol, asset, capital string) {
+	log.Println("进入 策略 服务...")
 	// TODO: 把 topic 封装起来
 	topic := fmt.Sprintf("%sBar", interval)
 	bars, err := ps.Subscribe(ctx, topic)
@@ -34,16 +35,19 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 	}
 	decBal := exch.DecBalanceFunc()
 	go func() {
+		log.Println("策略服务 go func ...")
 		short := ta.NewEWMA(10)
 		long := ta.NewEWMA(30)
 		var balance exch.Balance
 		orderTamplate := exch.NewOrder(symbol, asset, capital)
 		enc := exch.EncFunc()
 		for {
+			log.Println("策略  for 循环")
 			select {
 			case <-ctx.Done():
 				log.Fatalln("strategy service end: ", ctx.Err())
 			case msg := <-bars:
+				log.Println("策略  <-bars")
 				bar := decBar(msg.Payload)
 				msg.Ack()
 				short.Update(bar.Close)
@@ -70,6 +74,7 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 					}
 				}
 			case msg := <-balances:
+				log.Println("策略  <-balances")
 				balance = *decBal(msg.Payload)
 				msg.Ack()
 			}
