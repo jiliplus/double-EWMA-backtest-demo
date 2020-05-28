@@ -48,7 +48,9 @@ func main() {
 	backtest.BalanceService(context.TODO(), pubSub, prices, asset)
 
 	// 启动 backtest 交易所
-	// exch.NewBacktest(context.TODO(), pubSub)
+	usdt := exch.NewAsset("USDT", 10000, 0)
+	bal := exch.NewBalances(usdt)
+	backtest.NewBackTest(context.TODO(), pubSub, *bal)
 
 	// srcName := "./btcusdt.sqlite3"
 	srcName := "./binance.sqlite3"
