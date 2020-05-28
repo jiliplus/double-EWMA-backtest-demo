@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"github.com/jujili/exch"
+	"github.com/jujili/exch/backtest"
 )
 
 func main() {
@@ -20,8 +22,9 @@ func main() {
 	)
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+
 	go func() {
+		wg.Add(1)
 		ticks, err := pubSub.Subscribe(context.TODO(), "tick")
 		if err != nil {
 			panic(err)
@@ -35,12 +38,25 @@ func main() {
 		wg.Done()
 	}()
 
-	srcName := "./btcusdt.sqlite3"
-	// srcName := "./binance.sqlite3"
+	// 启动策略
+	strategyService(context.TODO(), pubSub, time.Hour, "BTCUSDT", "BTC", "USDT")
+
+	// 启动帐户服务
+	prices := make(map[string]float64, 2)
+	asset := "USDT"
+	prices[asset] = 1
+	backtest.BalanceService(context.TODO(), pubSub, prices, asset)
+
+	// 启动 backtest 交易所
+	// exch.NewBacktest(context.TODO(), pubSub)
+
+	// srcName := "./btcusdt.sqlite3"
+	srcName := "./binance.sqlite3"
 	//
 	db := openToMemory(srcName)
 	defer db.Close()
 	//
 	tickPublishService(context.TODO(), pubSub, db)
+	//
 	wg.Wait()
 }

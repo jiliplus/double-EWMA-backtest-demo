@@ -57,45 +57,49 @@ func copyDB(dst, src *sqlite3.SQLiteConn) {
 	backup.Step(-1)
 }
 
-func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
-	beginUTCMillisecond := int64(1514736000000)
-	endUTCMillisecond := int64(1577808000000)
-	// endUTCMillisecond := int64(1517414400000)
-	//
-	beginTime := tools.LocalTime(beginUTCMillisecond)
-	endTime := tools.LocalTime(endUTCMillisecond)
-	log.Printf("数据起止时间为 [%s, %s)", beginTime, endTime)
-	//
-	// sql := fmt.Sprintf("SELECT id, utc FROM btcusdt WHERE utc BETWEEN %d AND %d ORDER BY id DESC LIMIT 10", beginUTCMillisecond, endUTCMillisecond)
-	sql := fmt.Sprintf("SELECT id, utc FROM btcusdt WHERE utc BETWEEN %d AND %d", beginUTCMillisecond, endUTCMillisecond)
-	rows, err := db.Query(sql)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		var utc int64
-		err = rows.Scan(&id, &utc)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%02d %d\n", id, utc)
-	}
-	err = rows.Err()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+// func tickSrc(db *sql.DB, sendChan chan<- interface{}) {
+// 	beginUTCMillisecond := int64(1514736000000)
+// 	endUTCMillisecond := int64(1577808000000)
+// 	// endUTCMillisecond := int64(1517414400000)
+// 	//
+// 	beginTime := tools.LocalTime(beginUTCMillisecond)
+// 	endTime := tools.LocalTime(endUTCMillisecond)
+// 	log.Printf("数据起止时间为 [%s, %s)", beginTime, endTime)
+// 	//
+// 	// sql := fmt.Sprintf("SELECT id, utc FROM btcusdt WHERE utc BETWEEN %d AND %d ORDER BY id DESC LIMIT 10", beginUTCMillisecond, endUTCMillisecond)
+// 	sql := fmt.Sprintf("SELECT id, utc FROM btcusdt WHERE utc BETWEEN %d AND %d", beginUTCMillisecond, endUTCMillisecond)
+// 	rows, err := db.Query(sql)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer rows.Close()
+// 	for rows.Next() {
+// 		var id int
+// 		var utc int64
+// 		err = rows.Scan(&id, &utc)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		fmt.Printf("%02d %d\n", id, utc)
+// 	}
+// 	err = rows.Err()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
 func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB) {
-	beginUTCMillisecond := int64(1514736000000)
-	endUTCMillisecond := int64(1577808000000)
-	//
+	// 2018-01-01 0:00:00
+	// beginUTCMillisecond := int64(1514736000000)
+	// 2020-01-01 0:00:00
+	// endUTCMillisecond := int64(1577808000000)
+	// 2018-02-01 0:00:00
 	// endUTCMillisecond := int64(1517414400000)
-	// beginUTCMillisecond := int64(1502942432285)
+	// 2017/8/17 12:0:32 binance.sqlite3 中 btcusdt 的起时间
+	beginUTCMillisecond := int64(1502942432285)
 	// endUTCMillisecond := int64(1502943432285)
-	// endUTCMillisecond := int64(1509711755324)
+	// 2017/11/3 20:22:35
+	endUTCMillisecond := int64(1509711755324)
 	//
 	beginTime := tools.LocalTime(beginUTCMillisecond)
 	endTime := tools.LocalTime(endUTCMillisecond)
@@ -107,7 +111,7 @@ func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB)
 	}
 	defer rows.Close()
 	enc := exch.EncFunc()
-
+	//
 	for rows.Next() {
 		var id int64
 		var price, quantity float64
@@ -119,7 +123,7 @@ func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB)
 		// log.Println(id, price, quantity, utc)
 		tick := exch.NewTick(id, tools.LocalTime(utc), price, quantity)
 		payload := enc(tick)
-		log.Println("src", tick)
+		// log.Println("src", tick)
 		msg := message.NewMessage(watermill.NewUUID(), payload)
 		if err := pub.Publish("tick", msg); err != nil {
 			panic(err)
