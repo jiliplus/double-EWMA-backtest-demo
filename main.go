@@ -39,13 +39,17 @@ func main() {
 	}()
 
 	// 启动策略
+	log.Println("准备启动 策略")
 	strategyService(context.TODO(), pubSub, time.Hour, "BTCUSDT", "BTC", "USDT")
+	log.Println("完成启动 策略")
 
 	// 启动帐户服务
+	log.Println("准备启动 帐户记录服务")
 	prices := make(map[string]float64, 2)
 	asset := "USDT"
 	prices[asset] = 1
 	backtest.BalanceService(context.TODO(), pubSub, prices, asset)
+	log.Println("完成启动 帐户记录服务")
 
 	// 启动 backtest 交易所
 	usdt := exch.NewAsset("USDT", 10000, 0)
