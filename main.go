@@ -48,15 +48,17 @@ func main() {
 	// 启动帐户服务
 	log.Println("准备启动 帐户记录服务")
 	prices := make(map[string]float64, 2)
-	asset := "USDT"
-	prices[asset] = 1
+
+	asset, capital := "BTC", "USDT"
+	prices[capital] = 1
 	backtest.BalanceService(context.TODO(), pubSub, prices, asset)
 	log.Println("完成启动 帐户记录服务")
 
 	// 启动 backtest 交易所
 	usdt := exch.NewAsset("USDT", 10000, 0)
 	bal := exch.NewBalances(usdt)
-	backtest.NewBackTest(context.TODO(), pubSub, *bal)
+	log.Println("初始化的 Balance", bal)
+	backtest.NewBackTest(context.TODO(), pubSub, bal)
 
 	// 启动 TickBarService
 	backtest.TickBarService(context.TODO(), pubSub, interval)

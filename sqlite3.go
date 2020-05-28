@@ -128,6 +128,7 @@ func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB)
 		if err := pub.Publish("tick", msg); err != nil {
 			panic(err)
 		}
+		log.Println("\t\t waiting next tick")
 		// time.Sleep(time.Second)
 	}
 	err = rows.Err()
