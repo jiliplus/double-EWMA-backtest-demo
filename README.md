@@ -11,8 +11,16 @@
 
 使用 xgo 编译想要平台的程序 <https://github.com/karalabe/xgo>
 
+编译 Windows 7 的程序
+
 ```shell
-xgo --targets=windows/amd64 github.com/jujili/double-EWMA-backtest-demo
+xgo --targets=windows-6.1/amd64 github.com/jujili/double-EWMA-backtest-demo
+```
+
+编译 Windows 10 的程序
+
+```shell
+xgo --targets=windows-10.0/amd64 github.com/jujili/double-EWMA-backtest-demo
 ```
 
 ## 回测分析
