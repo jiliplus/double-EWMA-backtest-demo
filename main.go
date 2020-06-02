@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -20,24 +19,6 @@ func main() {
 		},
 		watermill.NewStdLogger(false, false),
 	)
-
-	var wg sync.WaitGroup
-
-	// 这只是为了让程序运行到最后
-	go func() {
-		wg.Add(1)
-		ticks, err := pubSub.Subscribe(context.TODO(), "tick")
-		if err != nil {
-			panic(err)
-		}
-		// decTick := exch.DecTickFunc()
-		for msg := range ticks {
-			// tick := decTick(msg.Payload)
-			msg.Ack()
-			// log.Println("in main go for", tick)
-		}
-		wg.Done()
-	}()
 
 	interval := time.Hour
 
@@ -72,5 +53,6 @@ func main() {
 	//
 	tickPublishService(context.TODO(), pubSub, db)
 	//
-	wg.Wait()
+	log.Println("close after 1 minute")
+	time.Sleep(time.Minute)
 }

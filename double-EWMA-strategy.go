@@ -42,12 +42,15 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 		orderTamplate := exch.NewOrder(symbol, asset, capital)
 		enc := exch.EncFunc()
 		for {
-			log.Println("策略  for 循环")
+			// log.Println("策略  for 循环")
 			select {
 			case <-ctx.Done():
 				log.Fatalln("strategy service end: ", ctx.Err())
-			case msg := <-bars:
-				// log.Println("策略  <-bars")
+			case msg, ok := <-bars:
+				if !ok {
+					log.Println("strategy service, bars, !ok")
+					continue
+				}
 				bar := decBar(msg.Payload)
 				msg.Ack()
 				short.Update(bar.Close)
@@ -73,7 +76,11 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 						log.Println("下市价卖单", order)
 					}
 				}
-			case msg := <-balances:
+			case msg, ok := <-balances:
+				if !ok {
+					log.Println("strategy service, balances, !ok, will return")
+					return
+				}
 				// log.Println("策略  <-balances")
 				balance = *decBal(msg.Payload)
 				msg.Ack()
