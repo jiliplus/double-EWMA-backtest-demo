@@ -23,17 +23,18 @@ func main() {
 
 	var wg sync.WaitGroup
 
+	// 这只是为了让程序运行到最后
 	go func() {
 		wg.Add(1)
 		ticks, err := pubSub.Subscribe(context.TODO(), "tick")
 		if err != nil {
 			panic(err)
 		}
-		decTick := exch.DecTickFunc()
+		// decTick := exch.DecTickFunc()
 		for msg := range ticks {
-			tick := decTick(msg.Payload)
+			// tick := decTick(msg.Payload)
 			msg.Ack()
-			log.Println("in main go for", tick)
+			// log.Println("in main go for", tick)
 		}
 		wg.Done()
 	}()

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -129,8 +128,8 @@ func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB)
 		if err := pub.Publish("tick", msg); err != nil {
 			panic(err)
 		}
-		log.Println("\t\t waiting next tick")
-		time.Sleep(time.Millisecond * 1)
+		// log.Println("\t\t waiting next tick")
+		// time.Sleep(time.Millisecond * 1)
 	}
 	err = rows.Err()
 	if err != nil {

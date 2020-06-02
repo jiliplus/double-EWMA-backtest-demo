@@ -47,7 +47,7 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 			case <-ctx.Done():
 				log.Fatalln("strategy service end: ", ctx.Err())
 			case msg := <-bars:
-				log.Println("策略  <-bars")
+				// log.Println("策略  <-bars")
 				bar := decBar(msg.Payload)
 				msg.Ack()
 				short.Update(bar.Close)
@@ -61,20 +61,20 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 					if free > 0 {
 						order := orderTamplate.With(exch.Market(exch.BUY, free))
 						message := message.NewMessage(watermill.NewUUID(), enc(order))
-						ps.Publish("order", message)
-						log.Println("下方买单", order)
+						go ps.Publish("order", message)
+						log.Println("下市价买单", order)
 					}
 				} else if s < l { // 市场开始下调
 					free := balance[asset].Free
 					if free > 0 {
 						order := orderTamplate.With(exch.Market(exch.SELL, free))
 						message := message.NewMessage(watermill.NewUUID(), enc(order))
-						ps.Publish("order", message)
-						log.Println("下方卖单", order)
+						go ps.Publish("order", message)
+						log.Println("下市价卖单", order)
 					}
 				}
 			case msg := <-balances:
-				log.Println("策略  <-balances")
+				// log.Println("策略  <-balances")
 				balance = *decBal(msg.Payload)
 				msg.Ack()
 			}
