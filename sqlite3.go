@@ -59,16 +59,16 @@ func copyDB(dst, src *sqlite3.SQLiteConn) {
 
 func tickPublishService(ctx context.Context, pub backtest.Publisher, db *sql.DB) {
 	// 1514736000000 2018-01-01 0:00:00
-	// beginUTCMillisecond := int64(1514736000000)
+	beginUTCMillisecond := int64(1514736000000)
 	// 1577808000000 2020-01-01 0:00:00
-	// endUTCMillisecond := int64(1577808000000)
+	endUTCMillisecond := int64(1577808000000)
 	// 1517414400000 2018-02-01 0:00:00
 	// endUTCMillisecond := int64(1517414400000)
 	// 1502942432285 2017/8/17 12:0:32 binance.sqlite3 中 btcusdt 的起时间
-	beginUTCMillisecond := int64(1502942432285)
+	// beginUTCMillisecond := int64(1502942432285)
 	// endUTCMillisecond :=   int64(1502943432285)
 	// 1509711755324 is 2017/11/3 20:22:35
-	endUTCMillisecond := int64(1509711755324)
+	// endUTCMillisecond := int64(1509711755324)
 	//
 	beginTime := tools.LocalTime(beginUTCMillisecond)
 	endTime := tools.LocalTime(endUTCMillisecond)
