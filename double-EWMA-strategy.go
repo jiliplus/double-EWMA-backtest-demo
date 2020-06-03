@@ -20,6 +20,7 @@ import (
 // 在下达新订单的时候，会先在 "cancelAllOrders" 里面发出通知，取消所有的未成交订单。
 // 然后再利用 "order" 话题下单。
 func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Duration, symbol, asset, capital string) {
+	available := 0
 	log.Println("进入 策略 服务...")
 	// TODO: 把 topic 封装起来
 	topic := fmt.Sprintf("%sBar", interval)
@@ -27,13 +28,24 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 	if err != nil {
 		panic(err)
 	}
+	available++
 	decBar := exch.DecBarFunc()
 	//
 	balances, err := ps.Subscribe(ctx, "balance")
 	if err != nil {
 		panic(err)
 	}
+	available++
 	decBal := exch.DecBalanceFunc()
+	//
+	ticks, err := ps.Subscribe(ctx, "tick")
+	if err != nil {
+		panic(err)
+	}
+	available++
+	decTick := exch.DecTickFunc()
+	maxPrice := 0.0
+	//
 	go func() {
 		log.Println("策略服务 go func ...")
 		short := ta.NewEWMA(10)
@@ -41,14 +53,41 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 		var balance exch.Balance
 		orderTamplate := exch.NewOrder(symbol, asset, capital)
 		enc := exch.EncFunc()
-		for {
+		for available > 0 {
 			// log.Println("策略  for 循环")
 			select {
 			case <-ctx.Done():
 				log.Fatalln("strategy service end: ", ctx.Err())
+			case msg, ok := <-ticks:
+				if !ok {
+					log.Println("strategy service, ticks, !ok")
+					available--
+					ticks = nil
+					continue
+				}
+				tick := decTick(msg.Payload)
+				newPrice := tick.Price
+				msg.Ack()
+				free := balance[asset].Free
+				if free == 0 {
+					maxPrice = -1
+					continue
+				}
+				if maxPrice < newPrice {
+					maxPrice = newPrice
+					continue
+				}
+				if newPrice/maxPrice < 0.93 {
+					order := orderTamplate.With(exch.Market(exch.SELL, free))
+					message := message.NewMessage(watermill.NewUUID(), enc(order))
+					go ps.Publish("order", message)
+					log.Println("下市价卖单, 止损，", order)
+				}
 			case msg, ok := <-bars:
 				if !ok {
 					log.Println("strategy service, bars, !ok")
+					available--
+					bars = nil
 					continue
 				}
 				bar := decBar(msg.Payload)
@@ -79,6 +118,8 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 			case msg, ok := <-balances:
 				if !ok {
 					log.Println("strategy service, balances, !ok, will return")
+					available--
+					balance = nil
 					return
 				}
 				// log.Println("策略  <-balances")
@@ -86,6 +127,7 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 				msg.Ack()
 			}
 		}
+		log.Println("double-EWMA-Strategy DONE!!")
 	}()
 }
 
