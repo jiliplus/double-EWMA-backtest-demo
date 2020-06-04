@@ -38,13 +38,13 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 	available++
 	decBal := exch.DecBalanceFunc()
 	//
-	// ticks, err := ps.Subscribe(ctx, "tick")
-	// if err != nil {
-	// panic(err)
-	// }
-	// available++
-	// decTick := exch.DecTickFunc()
-	// maxPrice := 0.0
+	ticks, err := ps.Subscribe(ctx, "tick")
+	if err != nil {
+		panic(err)
+	}
+	available++
+	decTick := exch.DecTickFunc()
+	maxPrice := 0.0
 	//
 	go func() {
 		log.Println("策略服务 go func ...")
@@ -58,31 +58,31 @@ func strategyService(ctx context.Context, ps backtest.Pubsub, interval time.Dura
 			select {
 			case <-ctx.Done():
 				log.Fatalln("strategy service end: ", ctx.Err())
-			// case msg, ok := <-ticks:
-			// 	if !ok {
-			// 		log.Println("strategy service, ticks, !ok")
-			// 		available--
-			// 		ticks = nil
-			// 		continue
-			// 	}
-			// 	tick := decTick(msg.Payload)
-			// 	newPrice := tick.Price
-			// 	msg.Ack()
-			// 	free := balance[asset].Free
-			// 	if free == 0 {
-			// 		maxPrice = -1
-			// 		continue
-			// 	}
-			// 	if maxPrice < newPrice {
-			// 		maxPrice = newPrice
-			// 		continue
-			// 	}
-			// 	if newPrice/maxPrice < 0.93 {
-			// 		order := orderTamplate.With(exch.Market(exch.SELL, free))
-			// 		message := message.NewMessage(watermill.NewUUID(), enc(order))
-			// 		go ps.Publish("order", message)
-			// 		log.Println("下市价卖单, 止损，", order)
-			// 	}
+			case msg, ok := <-ticks:
+				if !ok {
+					log.Println("strategy service, ticks, !ok")
+					available--
+					ticks = nil
+					continue
+				}
+				tick := decTick(msg.Payload)
+				newPrice := tick.Price
+				msg.Ack()
+				free := balance[asset].Free
+				if free == 0 {
+					maxPrice = -1
+					continue
+				}
+				if maxPrice < newPrice {
+					maxPrice = newPrice
+					continue
+				}
+				if newPrice/maxPrice < 0.01 {
+					order := orderTamplate.With(exch.Market(exch.SELL, free))
+					message := message.NewMessage(watermill.NewUUID(), enc(order))
+					go ps.Publish("order", message)
+					log.Println("下市价卖单, 止损，", order)
+				}
 			case msg, ok := <-bars:
 				if !ok {
 					log.Println("strategy service, bars, !ok")
